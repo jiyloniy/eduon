@@ -11,27 +11,7 @@ from rest_framework.exceptions import (
     NotAuthenticated,
     ValidationError,
 )
-from api.v1.serializers.authserializer import RegisterSerializer, LoginSerializers
-
-
-class RegisterView(CreateAPIView):
-    serializer_class = RegisterSerializer
-
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    def post(self, request):
-        serilizer = self.serializer_class(data=request.data)
-        serilizer.is_valid(raise_exception=True)
-        serilizer.save()
-        login(request, serilizer.instance)
-        refresh = RefreshToken.for_user(serilizer.instance)
-        return Response({"refresh": str(refresh), "access": str(refresh.access_token)})
-
-
+from api.v1.serializers.authserializer import LoginSerializers
 class Login(APIView):
     serializer_class = LoginSerializers
 
@@ -39,6 +19,8 @@ class Login(APIView):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
+        login(request, user)
+        user_type = 'admin' if user.user_type==1 else 'user' if user.user_type ==2 else 'student' if user.user_type==3 else 'teacher' if user_type == 4 else 'manager' 
         refresh = RefreshToken.for_user(user)
         refresh["test"] = "test"
         return Response({"refresh": str(refresh), "access": str(refresh.access_token)})

@@ -1,4 +1,4 @@
-from apps.users.models import User, Student
+from apps.users.models import User
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from rest_framework.exceptions import AuthenticationFailed
@@ -33,12 +33,3 @@ class LoginSerializers(serializers.Serializer):
         attrs['user'] = user
         return attrs
         
-    
-class StudentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Student
-        fields = ["user", "name", "surname", "age", "address"]
-
-    def create(self, validated_data):
-        student = Student.objects.create(**validated_data)
-        return student

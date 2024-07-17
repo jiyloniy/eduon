@@ -7,7 +7,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model, login
 from django.contrib.auth import authenticate
-
+from api.v1.serializers.authserializer import LoginSerializers
+from rest_framework.views import APIView
 User = get_user_model()
 
 
@@ -50,7 +51,7 @@ class SocialLoginView(APIView):
         if user:
             user_obj, created = User.objects.get_or_create(
                 email=user.email,
-                defaults={"username": user.email, "user_type": 1},  # student
+                defaults={"username": user.email, "user_type": 3},  # student
             )
 
             # Update profile picture
@@ -81,3 +82,21 @@ class SocialLoginView(APIView):
                 {"error": "Autentifikatsiya muvaffaqiyatsiz tugadi."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+
+
+class Login(APIView):
+    serializer_class = LoginSerializers
+
+    def post(self,request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        login(request,user)
+        user_type = 'admin' if user.user_type==1 else 'user' if user.user_type ==2 else 'student' if user.user_type==3 else 'teacher' if user_type == 4 else 'manager' 
+        refresh = RefreshToken.for_user(user)
+        refresh['user_type'] = user_type
+        return Response({
+            'refresh':str(refresh),
+            'access':str(refresh.access_token)
+        })
