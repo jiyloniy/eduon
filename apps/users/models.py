@@ -5,12 +5,6 @@ from django.urls import reverse
 
 
 class User(AbstractUser):
-    TYPE = (
-        (1, "student"),
-        (2, "admin"),
-        (3, "teacher"),
-    )
-    user_type = models.PositiveSmallIntegerField(default=1)
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = ["user_type"]
     profile_picture = models.URLField(max_length=500, blank=True, null=True)
@@ -19,76 +13,42 @@ class User(AbstractUser):
         return self.username
 
 
-class UserMixin(models.Model):
-    name = models.CharField(_("Ism"), max_length=50)
-    surname = models.CharField(_("Familiya"), max_length=50)
-    age = models.PositiveIntegerField(_("Yosh"))
-    address = models.CharField(_("Manzil"), max_length=50)
 
-    class Meta:
-        abstract = True
-        verbose_name = _("User")
-        verbose_name_plural = _("Users")
-
-
-class Student(UserMixin):
-    user = models.OneToOneField(
-        User,
-        on_delete=models.CASCADE,
-        related_name="student",
-        related_query_name="student",
-    )
-
-    class Meta:
-        verbose_name = _("Student")
-        verbose_name_plural = _("Students")
-
+class Role(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True, null=True)
+    
     def __str__(self) -> str:
         return self.name
 
-    def get_absolute_url(self):
-        return reverse("Student_detail", kwargs={"pk": self.pk})
 
 
-class Admin(UserMixin):
+class Permission(models.Model):
+    name =  models.CharField(max_length=100, unique=True)
+    codename = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True, null=True)
 
-    user = models.OneToOneField(
-        "User",
-        verbose_name=_(""),
-        on_delete=models.CASCADE,
-        related_name="admin",
-        related_query_name="admin",
-    )
-
-    class Meta:
-        verbose_name = _("Admin")
-        verbose_name_plural = _("Admins")
-
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
+    
 
-    def get_absolute_url(self):
-        return reverse("Admin_detail", kwargs={"pk": self.pk})
+class RolePermission(models.Model):
+    role = models.ForeignKey(Role, on_delete=models.CASCADE)
+    permission = models.ManyToManyField(Permission)
 
+    def __str__(self) -> str:
+        return f"{self.role.name} - {self.permission.name}"
+    
+class UserRole(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    role = models.ForeignKey(Role, on_delete=models.CASCADE)
 
-class Teacher(UserMixin):
-    user = models.OneToOneField(
-        User,
-        verbose_name=_("User"),
-        on_delete=models.CASCADE,
-        related_name="teacher",
-        related_query_name="teacher",
-    )
-
+    def __str__(self) -> str:
+        return f"{self.user.username} - {self.role.name}"
+    
     class Meta:
-        verbose_name = _("Teacher")
-        verbose_name_plural = _("Teachers")
-
-    def __str__(self):
-        return self.name
-
-    def get_absolute_url(self):
-        return reverse("Teacher_detail", kwargs={"pk": self.pk})
+        unique_together = ('user', 'role')
 
 
-from django.template import Context, Template
+
+
