@@ -40,7 +40,7 @@ class VideoViewSet(viewsets.ModelViewSet):
     queryset = Video.objects.all()
     serializer_class = VideoSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-
+    
     @action(detail=False, methods=["post"])
     def upload(self, request):
         course_id = request.data.get("course_id")
