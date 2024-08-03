@@ -1,14 +1,14 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
+from django.contrib.auth import authenticate, get_user_model, login
 from rest_framework import status
-from social_django.utils import load_strategy, load_backend
-from social_core.exceptions import MissingBackend, AuthTokenError, AuthForbidden
 from rest_framework.permissions import AllowAny
-from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import get_user_model, login
-from django.contrib.auth import authenticate
-from api.v1.serializers.authserializer import LoginSerializers
+from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
+from social_core.exceptions import AuthForbidden, AuthTokenError, MissingBackend
+from social_django.utils import load_backend, load_strategy
+
+from api.v1.serializers.authserializer import LoginSerializers
+
 User = get_user_model()
 
 
@@ -84,19 +84,25 @@ class SocialLoginView(APIView):
             )
 
 
-
 class Login(APIView):
     serializer_class = LoginSerializers
 
-    def post(self,request):
+    def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data['user']
-        login(request,user)
-        user_type = 'admin' if user.user_type==1 else 'user' if user.user_type ==2 else 'student' if user.user_type==3 else 'teacher' if user_type == 4 else 'manager' 
+        user = serializer.validated_data["user"]
+        login(request, user)
+        user_type = (
+            "admin"
+            if user.user_type == 1
+            else "user"
+            if user.user_type == 2
+            else "student"
+            if user.user_type == 3
+            else "teacher"
+            if user.user_type == 4
+            else "manager"
+        )
         refresh = RefreshToken.for_user(user)
-        refresh['user_type'] = user_type
-        return Response({
-            'refresh':str(refresh),
-            'access':str(refresh.access_token)
-        })
+        refresh["user_type"] = user_type
+        return Response({"refresh": str(refresh), "access": str(refresh.access_token)})
